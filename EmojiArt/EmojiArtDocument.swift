@@ -12,7 +12,6 @@ class EmojiArtDocument: ObservableObject {
     typealias Position = EmojiArt.Emoji.Position
     
     @Published private var emojiArt = EmojiArt()
-    
     var emojis: [Emoji] { emojiArt.emojis }
     var background: URL? { emojiArt.background }
     
