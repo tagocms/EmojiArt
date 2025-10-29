@@ -9,7 +9,7 @@ import SwiftUI
 
 class EmojiArtDocument: ObservableObject {
     typealias Emoji = EmojiArt.Emoji
-    typealias Position = EmojiArt.Emoji.Position
+    typealias EmojiPosition = EmojiArt.Emoji.Position
     
     @Published private var emojiArt = EmojiArt()
     var emojis: [Emoji] { emojiArt.emojis }
@@ -27,6 +27,18 @@ class EmojiArtDocument: ObservableObject {
     
     func addEmoji(_ emoji: String, at position: Emoji.Position, size: CGFloat) {
         emojiArt.addEmoji(emoji, at: position, size: Int(size))
+    }
+    
+    func deleteEmoji(_ emoji: Emoji) {
+        emojiArt.deleteEmoji(emoji.id)
+    }
+    
+    func updateEmojiPosition(for emojiID: Emoji.ID, at position: EmojiPosition) {
+        emojiArt.updateEmojiPosition(emojiID, at: position)
+    }
+    
+    func updateEmojiSize(for emojiID: Emoji.ID, to size: CGFloat) {
+        emojiArt.updateEmojiSize(emojiID, to: Int(size))
     }
 }
 

@@ -18,7 +18,23 @@ struct EmojiArt {
         emojis.append(Emoji(string: emoji, position: position, size: size, id: uniqueEmojiId))
     }
     
-    struct Emoji: Identifiable {
+    mutating func updateEmojiPosition(_ emojiID: Emoji.ID, at position: Emoji.Position) {
+        guard let emojiIndex = emojis.firstIndex(where: { $0.id == emojiID } ) else { return }
+        
+        emojis[emojiIndex].position = position
+    }
+    
+    mutating func updateEmojiSize(_ emojiID: Emoji.ID, to size: Int) {
+        guard let emojiIndex = emojis.firstIndex(where: { $0.id == emojiID } ) else { return }
+        
+        emojis[emojiIndex].size = size
+    }
+    
+    mutating func deleteEmoji(_ emojiID: Emoji.ID) {
+        emojis.removeAll { $0.id == emojiID }
+    }
+    
+    struct Emoji: Identifiable, Equatable {
         let string: String
         var position: Position
         var size: Int
@@ -29,6 +45,10 @@ struct EmojiArt {
             var y: Int
             
             static let zero = Self(x: 0, y: 0)
+        }
+        
+        static func ==(lhs: Emoji, rhs: Emoji) -> Bool {
+            lhs.id == rhs.id
         }
     }
 }
