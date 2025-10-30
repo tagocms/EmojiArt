@@ -17,7 +17,6 @@ struct EmojiArtDocumentView: View {
     @ObservedObject var document: EmojiArtDocument
     @State private var selectedEmojis: Set<Emoji.ID> = []
     
-    
     var body: some View {
         VStack(spacing: 0) {
             documentBody
@@ -141,8 +140,18 @@ struct EmojiArtDocumentView: View {
     
     @ViewBuilder
     private func documentContents(in geometry: GeometryProxy) -> some View {
-        AsyncImage(url: document.background)
-            .position(Emoji.Position.zero.in(geometry))
+        AsyncImage(url: document.background) { phase in
+            if let image = phase.image {
+                image
+            } else if let url = document.background {
+                if phase.error != nil {
+                    Text("\(url)")
+                } else {
+                    ProgressView()
+                }
+            }
+        }
+        .position(Emoji.Position.zero.in(geometry))
         ForEach(document.emojis) { emoji in
             Text(emoji.string)
                 .font(emoji.font)
@@ -157,7 +166,6 @@ struct EmojiArtDocumentView: View {
                 .position(emoji.position.in(geometry))
                 .offset(isEmojiSelected(emoji) ? gesturePan : .zero)
                 .gesture(selectEmojiGesture(for: emoji))
-            // TODO: Implement emoji dragging while updating
         }
     }
     

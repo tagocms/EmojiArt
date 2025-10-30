@@ -11,13 +11,35 @@ class EmojiArtDocument: ObservableObject {
     typealias Emoji = EmojiArt.Emoji
     typealias EmojiPosition = EmojiArt.Emoji.Position
     
-    @Published private var emojiArt = EmojiArt()
+    @Published private var emojiArt = EmojiArt() {
+        didSet {
+            autosave()
+        }
+    }
     var emojis: [Emoji] { emojiArt.emojis }
     var background: URL? { emojiArt.background }
     
     init() {
-        self.emojiArt.addEmoji("🚲", at: .init(x: -200, y: -150), size: 200)
-        self.emojiArt.addEmoji("🔥", at: .init(x: 200, y: 100), size: 80)
+        if let data = try? Data(contentsOf: autosaveURL) {
+            if let autosavedEmojiArt = try? EmojiArt(json: data) {
+                emojiArt = autosavedEmojiArt
+            }
+        }
+    }
+    
+    private let autosaveURL: URL = URL.documentsDirectory.appendingPathComponent("Autosaved.emojiart")
+    
+    private func autosave() {
+        save(to: autosaveURL)
+        print("Autosaved to \(autosaveURL)")
+    }
+    private func save(to url: URL) {
+        do {
+            let data = try emojiArt.json()
+            try data.write(to: url)
+        } catch let error {
+            print("EmojiArtDocument: error while saving \(error.localizedDescription)")
+        }
     }
     
     // MARK: - Intents
