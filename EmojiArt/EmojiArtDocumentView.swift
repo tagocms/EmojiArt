@@ -10,10 +10,9 @@ import SwiftUI
 struct EmojiArtDocumentView: View {
     typealias Emoji = EmojiArt.Emoji
     typealias EmojiPosition = Emoji.Position
-    struct Constants {
-        static let paletteEmojiSize: CGFloat = 40
-    }
-    
+    @Environment(\.undoManager) var undoManager
+    @ScaledMetric var paletteEmojiSize: CGFloat = 40
+    @StateObject var paletteStore = PaletteStore(named: "Shared")
     @ObservedObject var document: EmojiArtDocument
     @State private var selectedEmojis: Set<Emoji.ID> = []
     
@@ -21,10 +20,14 @@ struct EmojiArtDocumentView: View {
         VStack(spacing: 0) {
             documentBody
             PaletteChooser()
-                .font(.system(size: Constants.paletteEmojiSize))
+                .font(.system(size: paletteEmojiSize))
                 .padding(.horizontal)
                 .scrollIndicators(.hidden)
         }
+        .toolbar {
+            UndoButton()
+        }
+        .environmentObject(paletteStore)
     }
     
     private var documentBody: some View {
@@ -114,7 +117,7 @@ struct EmojiArtDocumentView: View {
                     for emojiID in selectedEmojis {
                         guard let emoji = document.emojis.first(where: { $0.id == emojiID }) else { continue }
                         
-                        document.updateEmojiSize(for: emojiID, to: CGFloat(emoji.size) * endingPinchScale)
+                        document.updateEmojiSize(for: emojiID, to: CGFloat(emoji.size) * endingPinchScale, undoWith: undoManager)
                     }
                 }
             }
@@ -169,7 +172,8 @@ struct EmojiArtDocumentView: View {
             at: EmojiArt.Emoji.Position(
                 x: emoji.position.x + Int(modelOffsetX),
                 y: emoji.position.y + Int(modelOffsetY)
-            )
+            ),
+            undoWith: undoManager
         )
     }
     
@@ -198,7 +202,7 @@ struct EmojiArtDocumentView: View {
                 .border(isEmojiSelected(emoji) ? .gray : .clear, width: 0.5)
                 .contextMenu {
                     Button("Delete emoji", role: .destructive) {
-                        document.deleteEmoji(emoji)
+                        document.deleteEmoji(emoji, undoWith: undoManager)
                     }
                 }
                 .scaleEffect(isEmojiSelected(emoji) ? 1 * gestureZoom : 1)
@@ -216,13 +220,14 @@ struct EmojiArtDocumentView: View {
                 document.addEmoji(
                     string,
                     at: emojiPosition(at: location, in: geometry),
-                    size: Constants.paletteEmojiSize / zoom
+                    size: paletteEmojiSize / zoom,
+                    undoWith: undoManager
                 )
                 return true
             case .url(let url):
-                document.setBackground(url)
+                document.setBackground(url, undoWith: undoManager)
                 return true
-            case .data(let data):
+            case .data(_):
                 break
             }
             return true
